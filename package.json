@@ -1,0 +1,21 @@
+{
+  "name": "skeldir",
+  "version": "1.0.0",
+  "description": "CLI to scaffold a Flutter project with my custom architecture",
+  "bin": {
+    "skeldir": "bin/index.js"
+  },
+  "author": "Bhavyaa",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^11.1.0"
+  },
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "devDependencies": {}
+}
