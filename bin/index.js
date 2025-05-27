@@ -7,21 +7,24 @@ import path from "path";
 
 const isWindows = os.platform() === "win32";
 
-// For colored output that adapts to platform
-function colorText(text, colorFunc) {
-  return colorFunc(text);
+// Log helpers
+function logVerbose(msg, enabled) {
+  if (enabled) console.log(chalk.gray(`[VERBOSE] ${msg}`));
+}
+function logDebug(msg, enabled) {
+  if (enabled) console.log(chalk.magenta(`[DEBUG] ${msg}`));
 }
 
-// Validate project name
 function isValidProjectName(name) {
   return /^[a-zA-Z0-9_-]+$/.test(name);
 }
 
-// Parse directory tree text into an object structure
+// parse pasted tree structure
 function parseTree(inputLines) {
   const root = {};
   const stack = [{ depth: -1, node: root }];
 
+  // find depth
   function getDepth(line) {
     const treeChars = new Set([" ", "│", "├", "└", "─"]);
     let firstCharIndex = 0;
@@ -49,34 +52,43 @@ function parseTree(inputLines) {
     }
 
     const parent = stack[stack.length - 1].node;
-    if (isFolder) {
-      parent[name] = node;
-      stack.push({ depth, node });
-    } else {
-      parent[name] = null;
-    }
+    parent[name] = node;
+    if (isFolder) stack.push({ depth, node });
   });
 
   return root;
 }
 
-// Recursively create folders/files from parsed structure
-function createCustomWithContent(basePath, structure) {
+// recursive function to create respective directories
+function createCustomWithContent(
+  basePath,
+  structure,
+  verbose = false,
+  debug = false
+) {
   for (const key in structure) {
     const fullPath = path.join(basePath, key);
     const value = structure[key];
-    if (value === null) {
-      fs.writeFileSync(fullPath, `// ${key} created by CLI\n`);
-    } else if (typeof value === "string") {
-      fs.writeFileSync(fullPath, value);
-    } else {
-      fs.mkdirSync(fullPath, { recursive: true });
-      createCustomWithContent(fullPath, value);
+    try {
+      if (value === null) {
+        fs.writeFileSync(fullPath, `// ${key} created by CLI\n`);
+        logVerbose(`Created file: ${fullPath}`, verbose);
+      } else if (typeof value === "string") {
+        fs.writeFileSync(fullPath, value);
+        logVerbose(`Created file with content: ${fullPath}`, verbose);
+      } else {
+        fs.mkdirSync(fullPath, { recursive: true });
+        logVerbose(`Created folder: ${fullPath}`, verbose);
+        createCustomWithContent(fullPath, value, verbose, debug);
+      }
+    } catch (err) {
+      console.error(chalk.red(`❌ Error creating ${fullPath}: ${err.message}`));
+      if (debug) console.error(err.stack);
+      process.exit(1);
     }
   }
 }
 
-// Commander setup
 program
   .name("skeldir")
   .description("CLI to scaffold projects with custom file structures")
@@ -89,7 +101,17 @@ program
   .option("--node", "Generate Node.js project")
   .option("--react", "Generate React project")
   .option("--custom", "Create project structure from pasted directory tree")
+  .option("--verbose", "Enable verbose logging")
+  .option("--debug", "Enable debug logs (more detailed)")
+  .version("1.0.0", "-v, --version", "Show version number")
   .action(async (projectName, options) => {
+    const { verbose, debug } = options;
+
+    logDebug(
+      `Detected platform: ${isWindows ? "Windows" : "Unix-like"}`,
+      debug
+    );
+
     if (!isValidProjectName(projectName)) {
       console.log(
         chalk.red(
@@ -105,8 +127,25 @@ program
       process.exit(1);
     }
 
-    fs.mkdirSync(targetDir);
+    try {
+      fs.mkdirSync(targetDir);
+      logVerbose(`Project directory created at: ${targetDir}`, verbose);
+    } catch (err) {
+      console.error(chalk.red(`❌ Failed to create directory: ${err.message}`));
+      if (debug) console.error(err.stack);
+      process.exit(1);
+    }
 
+    const writeFile = (filename, content) => {
+      const filePath = path.join(targetDir, filename);
+      fs.writeFileSync(filePath, content);
+      logVerbose(`Created file: ${filePath}`, verbose);
+    };
+
+    const createReadme = () =>
+      writeFile("README.md", `# ${projectName}\n\nCreated by skeldir CLI`);
+
+    // structure handling
     if (options.flutter) {
       console.log(chalk.green("\n🚀 Creating Flutter project structure...\n"));
       const structure = {
@@ -132,65 +171,33 @@ program
           "main.dart": null,
         },
       };
-      createCustomWithContent(targetDir, structure);
-      console.log(
-        chalk.green(`\n✅ Flutter project created at ${targetDir}\n`)
-      );
+      createCustomWithContent(targetDir, structure, verbose, debug);
     } else if (options.java) {
-      const srcPath = path.join(targetDir, "src", "main", "java");
-      fs.mkdirSync(srcPath, { recursive: true });
-      const javaCode = `public class App {
-    public static void main(String[] args) {
-        System.out.println("Hello, Java!");
-    }
-}`;
-      fs.writeFileSync(path.join(srcPath, "App.java"), javaCode);
-      fs.writeFileSync(
-        path.join(targetDir, "README.md"),
-        `# ${projectName}\n\nCreated by CLI`
+      const javaPath = path.join(targetDir, "src", "main", "java");
+      fs.mkdirSync(javaPath, { recursive: true });
+      writeFile(
+        path.join("src", "main", "java", "App.java"),
+        `public class App {\n    public static void main(String[] args) {\n        System.out.println("Hello, Java!");\n    }\n}`
       );
-      console.log(chalk.green(`\n✅ Java project created at ${targetDir}\n`));
+      createReadme();
     } else if (options.python) {
-      const mainPy = `def main():
-    print("Hello, Python!")
-
-if __name__ == "__main__":
-    main()
-`;
-      fs.writeFileSync(path.join(targetDir, "main.py"), mainPy);
-      fs.writeFileSync(
-        path.join(targetDir, "README.md"),
-        `# ${projectName}\n\nCreated by CLI`
+      writeFile(
+        "main.py",
+        `def main():\n    print("Hello, Python!")\n\nif __name__ == "__main__":\n    main()\n`
       );
-      console.log(chalk.green(`\n✅ Python project created at ${targetDir}\n`));
+      createReadme();
     } else if (options.c) {
-      const mainC = `#include <stdio.h>
-
-int main() {
-    printf("Hello, C!\\n");
-    return 0;
-}
-`;
-      fs.writeFileSync(path.join(targetDir, "main.c"), mainC);
-      fs.writeFileSync(
-        path.join(targetDir, "README.md"),
-        `# ${projectName}\n\nCreated by CLI`
+      writeFile(
+        "main.c",
+        `#include <stdio.h>\n\nint main() {\n    printf("Hello, C!\\n");\n    return 0;\n}\n`
       );
-      console.log(chalk.green(`\n✅ C project created at ${targetDir}\n`));
+      createReadme();
     } else if (options.cpp) {
-      const mainCpp = `#include <iostream>
-
-int main() {
-    std::cout << "Hello, C++!" << std::endl;
-    return 0;
-}
-`;
-      fs.writeFileSync(path.join(targetDir, "main.cpp"), mainCpp);
-      fs.writeFileSync(
-        path.join(targetDir, "README.md"),
-        `# ${projectName}\n\nCreated by CLI`
+      writeFile(
+        "main.cpp",
+        `#include <iostream>\n\nint main() {\n    std::cout << "Hello, C++!" << std::endl;\n    return 0;\n}\n`
       );
-      console.log(chalk.green(`\n✅ C++ project created at ${targetDir}\n`));
+      createReadme();
     } else if (options.node) {
       const packageJson = {
         name: projectName,
@@ -200,19 +207,12 @@ int main() {
           start: "node index.js",
         },
       };
-      fs.writeFileSync(
-        path.join(targetDir, "package.json"),
-        JSON.stringify(packageJson, null, 2)
-      );
-      fs.writeFileSync(
-        path.join(targetDir, "index.js"),
-        `console.log("Hello, Node.js!");\n`
-      );
-      console.log(
-        chalk.green(`\n✅ Node.js project created at ${targetDir}\n`)
-      );
+      writeFile("package.json", JSON.stringify(packageJson, null, 2));
+      writeFile("index.js", `console.log("Hello, Node.js!");\n`);
     } else if (options.react) {
       fs.mkdirSync(path.join(targetDir, "src"), { recursive: true });
+      fs.mkdirSync(path.join(targetDir, "public"), { recursive: true });
+
       const packageJson = {
         name: projectName,
         version: "1.0.0",
@@ -227,51 +227,23 @@ int main() {
           "react-scripts": "5.0.1",
         },
       };
-      fs.writeFileSync(
-        path.join(targetDir, "package.json"),
-        JSON.stringify(packageJson, null, 2)
+      writeFile("package.json", JSON.stringify(packageJson, null, 2));
+      writeFile(
+        path.join("src", "App.js"),
+        `import React from 'react';\n\nexport default function App() {\n  return <h1>Hello, React!</h1>;\n}`
       );
-      fs.writeFileSync(
-        path.join(targetDir, "src", "App.js"),
-        `import React from 'react';
-
-export default function App() {
-  return <h1>Hello, React!</h1>;
-}
-`
+      writeFile(
+        path.join("src", "index.js"),
+        `import React from 'react';\nimport ReactDOM from 'react-dom/client';\nimport App from './App';\n\nconst root = ReactDOM.createRoot(document.getElementById('root'));\nroot.render(<App />);`
       );
-      fs.writeFileSync(
-        path.join(targetDir, "src", "index.js"),
-        `import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
-`
+      writeFile(
+        path.join("public", "index.html"),
+        `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8" />\n  <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n  <title>${projectName}</title>\n</head>\n<body>\n  <div id="root"></div>\n</body>\n</html>`
       );
-      const publicDir = path.join(targetDir, "public");
-      fs.mkdirSync(publicDir);
-      fs.writeFileSync(
-        path.join(publicDir, "index.html"),
-        `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${projectName}</title>
-</head>
-<body>
-  <div id="root"></div>
-</body>
-</html>
-`
-      );
-      console.log(chalk.green(`\n✅ React project created at ${targetDir}\n`));
     } else if (options.custom) {
       console.log(
         chalk.green(
-          "\n📋 Paste your directory structure (end input with an empty line):\n"
+          "\n📋 Paste your directory structure (end with an empty line):\n"
         )
       );
       const readline = await import("readline");
@@ -285,22 +257,21 @@ root.render(<App />);
         if (!line.trim()) break;
         lines.push(line);
       }
-
       rl.close();
+
       const structure = parseTree(lines);
-      createCustomWithContent(targetDir, structure);
-      console.log(
-        chalk.cyan(
-          `\n✅ Project '${projectName}' created from structure at ${targetDir}\n`
-        )
-      );
+      createCustomWithContent(targetDir, structure, verbose, debug);
     } else {
       console.log(
         chalk.yellow(
-          "\n⚠️ No valid framework/language selected. Base folder created.\n"
+          "\n⚠️ No framework/language option selected. Created empty folder.\n"
         )
       );
     }
+
+    console.log(
+      chalk.green(`\n✅ Project '${projectName}' created at ${targetDir}\n`)
+    );
   });
 
 program.usage("<project-name> [options]");
