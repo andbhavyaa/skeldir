@@ -1,4 +1,4 @@
-// #!/usr/bin/env node
+#!/usr/bin/env node
 import chalk from "chalk";
 import { program } from "commander";
 import fs from "fs";
@@ -24,7 +24,7 @@ function parseTree(inputLines) {
 
   function getDepth(line) {
     const treeChars = new Set([" ", "│", "├", "└", "─"]);
-    let firstCharIndex = 0;
+    let firstCharIndex = 0; 
     while (
       firstCharIndex < line.length &&
       treeChars.has(line[firstCharIndex])

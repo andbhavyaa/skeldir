@@ -1,7 +1,7 @@
 {
   "name": "skeldir",
   "version": "1.0.0",
-  "description": "CLI to scaffold a Flutter project with my custom architecture",
+  "description": "CLI to generate directory for a project from pasted tree structure.",
   "bin": {
     "skeldir": "bin/index.js"
   },
