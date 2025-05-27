@@ -1,6 +1,6 @@
 {
   "name": "skeldir",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI to generate directory for a project from pasted tree structure.",
   "bin": {
     "skeldir": "bin/index.js"
