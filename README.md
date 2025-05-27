@@ -42,7 +42,7 @@ skeldir my_python_project --python
 
 #### Use a custom tree structure (paste your tree structure when prompted, press ENTER to generate):
 ```bash
-skeldir my_project --from-structure
+skeldir my_project --custom
 ```
 
 #### Enable verbose logging to see more details:
