@@ -6,8 +6,6 @@
 
 ---
 
----
-
 ## 📚 Table of Contents
 
 - [Why skeldir?](#why-skeldir)
@@ -18,7 +16,6 @@
 - [🛠️ Options](#️-options)
 - [🤝 Contributing](#-contributing)
 
----
 
 
 ## Why skeldir?
