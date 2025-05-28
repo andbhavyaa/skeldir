@@ -3,18 +3,18 @@ import chalk from "chalk";
 import { program } from "commander";
 import fs, { readFileSync } from "fs";
 import os from "os";
-import path from "path";
+import path, { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
-// Get __dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(__filename);
 
-// Read package.json dynamically
+// Now safely read the correct package.json from root
 const packageJson = JSON.parse(
-  readFileSync(path.join(__dirname, "package.json"), "utf-8")
+  readFileSync(join(__dirname, "..", "package.json"), "utf-8")
 );
-const version = packageJson.version;
+
+program.version(packageJson.version, "-v, --version", "Show version number");
 
 const isWindows = os.platform() === "win32";
 
@@ -114,8 +114,7 @@ program
   .option("--custom", "Create project structure from pasted directory tree")
   .option("--verbose", "Enable verbose logging")
   .option("--debug", "Enable debug logs (more detailed)")
-  //show version dynamically
-  .version(`skeldir CLI version ${version}`, "-v, --version")
+  .version(packageJson.version, "-v, --version", "Show version number")
   .action(async (projectName, options) => {
     const { verbose, debug } = options;
 
