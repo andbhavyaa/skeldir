@@ -29,6 +29,7 @@ function isValidProjectName(name) {
 
 // asked copilot and gpt for help with advanced tree parsing
 // drew and revised the code to make it more robust and handle edge cases
+
 function parseTree(inputLines) {
   if (inputLines.length === 0) return {};
 
@@ -72,81 +73,6 @@ function parseTree(inputLines) {
 
   return root;
 }
-
-//this function below is not used anymore but kept because it was a good attempt at parsing the tree structure
-// it was replaced with the above parseTree function which is more robust and handles edge cases better
-// function parseTree(inputLines) {
-//   const root = {};
-//   const stack = [{ depth: -1, node: root }];
-
-//   function getDepth(line) {
-//     // Find the index of branch characters '├' or '└'
-//     const branchIndex = line.search(/├── |└── /);
-//     if (branchIndex === -1) return 0;
-
-//     // Depth is how many groups of 4 characters before the branch
-//     // Because each indent level is represented by 4 chars visually
-//     return Math.floor(branchIndex / 4);
-//   }
-
-//   inputLines.forEach((line) => {
-//     if (!line.trim()) return;
-
-//     const depth = getDepth(line);
-//     const clean = line.replace(/^[│ ├└─]+/, "").trim();
-//     const isFolder = clean.endsWith("/");
-//     const name = isFolder ? clean.slice(0, -1) : clean;
-//     const node = isFolder ? {} : null;
-
-//     // Pop stack until parent at depth - 1 found
-//     while (stack.length && depth <= stack[stack.length - 1].depth) {
-//       stack.pop();
-//     }
-
-//     const parent = stack[stack.length - 1].node;
-//     parent[name] = node;
-//     if (isFolder) {
-//       stack.push({ depth, node });
-//     }
-//   });
-
-//   return root;
-// }
-
-// // parse pasted tree structure
-// function parseTree(inputLines) {
-//   const root = {};
-//   const stack = [{ depth: -1, node: root }];
-
-//   function getDepth(line) {
-//     const match = line.match(/^([│ ]*?)(├── |└── )?/);
-//     if (!match) return 0;
-//     const prefix = match[1] || "";
-//     return [...prefix].filter((ch) => ch === " " || ch === "│").length / 4;
-//   }
-
-//   inputLines.forEach((line) => {
-//     if (!line.trim()) return;
-
-//     const depth = getDepth(line);
-//     const clean = line.replace(/^[│ ├└─]+/, "").trim();
-//     const isFolder = clean.endsWith("/");
-//     const name = isFolder ? clean.slice(0, -1) : clean;
-//     const node = isFolder ? {} : null;
-
-//     while (stack.length && depth <= stack[stack.length - 1].depth) {
-//       stack.pop();
-//     }
-
-//     const parent = stack[stack.length - 1].node;
-//     parent[name] = node;
-//     if (isFolder) {
-//       stack.push({ depth, node });
-//     }
-//   });
-
-//   return root;
-// }
 
 // recursive function to create respective directories
 function createCustomWithContent(
