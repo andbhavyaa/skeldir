@@ -6,6 +6,21 @@
 
 ---
 
+---
+
+## 📚 Table of Contents
+
+- [Why skeldir?](#why-skeldir)
+- [✨ Features](#-features)
+- [📦 Installation](#-installation)
+- [💡 Usage](#-usage)
+- [📌 Examples](#-examples)
+- [🛠️ Options](#️-options)
+- [🤝 Contributing](#-contributing)
+
+---
+
+
 ## Why skeldir?
 
 I created `skeldir` because I got tired of manually setting up project folders every time I start a new idea. Copy-pasting old templates felt clunky and often included unnecessary files or folders I didn’t need.
