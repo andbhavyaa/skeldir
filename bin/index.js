@@ -27,9 +27,6 @@ function isValidProjectName(name) {
   return /^[a-zA-Z0-9_-]+$/.test(name);
 }
 
-// asked copilot and gpt for help with advanced tree parsing
-// drew and revised the code to make it more robust and handle edge cases
-
 function parseTree(inputLines) {
   if (inputLines.length === 0) return {};
 
