@@ -2,6 +2,7 @@
 
 #### A minimal CLI tool to quickly scaffold clean project directories from your pasted tree structure.  
 ##### No clutter, no hassle — just your project ready to go.
+[![npm version](https://img.shields.io/npm/v/skeldir)](https://www.npmjs.com/package/skeldir)
 
 ---
 
@@ -13,7 +14,7 @@ AI can generate project layouts fast, but making all those files yourself is a h
 
 ---
 
-## Features
+## ✨ Features
 
 - Instantly generate project folder structures  
 - Supports multiple languages and custom trees  
@@ -24,17 +25,22 @@ AI can generate project layouts fast, but making all those files yourself is a h
 
 ---
 
-## Installation
+## 📦 Installation
 
 ```bash
 npm install -g skeldir
 ```
-## Usage
+  ####        (or)
+```bash
+npm i skeldir
+```
+
+## 💡 Usage
 ```bash
 skeldir <project-name> [options]
 ```
 
-## Examples
+## 📌 Examples
 #### Create a Python project skeleton:
 ```bash
 skeldir my_python_project --python
@@ -53,7 +59,7 @@ skeldir myReactApp --react --verbose
 ```bash
 skeldir MyJavaProject --java --debug
 ```
-#### Check Version (1.0.0):
+#### Check Version (1.0.4):
 ```bash
 skeldir --version
 ```
@@ -77,4 +83,29 @@ skeldir --version
 | `-v, --version` | Show version number                                 |
 | `-h, --help`    | Display help for command                            |
 
+---
+
+## 🤝 Contributing
+### Contributions are welcome! Whether it's fixing bugs, suggesting new features, or improving the docs — every bit helps.
+
+## 🧭 Getting Started
+### 1. Fork this repo
+
+### 2. Clone your fork
+
+### 3. Install dependencies
+```bash
+npm install
+```
+### 4. Make your changes
+#### Please follow the current coding style and keep commits clean and descriptive.
+
+### 5. Test your changes
+#### Make sure your additions work well and don’t break existing features.
+
+### 6. Submit a pull request
+- #### Describe what you changed and why
+- #### Additionally, you may also link any related issues
+
+---
 
