@@ -1,9 +1,20 @@
 #!/usr/bin/env node
 import chalk from "chalk";
 import { program } from "commander";
-import fs from "fs";
+import fs, { readFileSync } from "fs";
 import os from "os";
 import path from "path";
+import { fileURLToPath } from "url";
+
+// Get __dirname in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Read package.json dynamically
+const packageJson = JSON.parse(
+  readFileSync(path.join(__dirname, "package.json"), "utf-8")
+);
+const version = packageJson.version;
 
 const isWindows = os.platform() === "win32";
 
@@ -103,7 +114,8 @@ program
   .option("--custom", "Create project structure from pasted directory tree")
   .option("--verbose", "Enable verbose logging")
   .option("--debug", "Enable debug logs (more detailed)")
-  .version("1.0.0", "-v, --version", "Show version number")
+  //show version dynamically
+  .version(`skeldir CLI version ${version}`, "-v, --version")
   .action(async (projectName, options) => {
     const { verbose, debug } = options;
 

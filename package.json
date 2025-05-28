@@ -9,13 +9,13 @@
   "license": "MIT",
   "dependencies": {
     "chalk": "^5.4.1",
-    "commander": "^11.1.0"
+    "commander": "^11.1.0",
+    "skeldir": "^1.0.1"
   },
   "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "devDependencies": {}
+  "keywords": []
 }
