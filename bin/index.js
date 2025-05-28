@@ -1,20 +1,17 @@
 #!/usr/bin/env node
 import chalk from "chalk";
 import { program } from "commander";
-import fs, { readFileSync } from "fs";
+import fs from "fs";
 import os from "os";
-import path, { dirname, join } from "path";
+import path from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = path.dirname(__filename);
+const packageJsonPath = path.resolve(__dirname, "..", "package.json"); // one level up
+const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
 
-// Now safely read the correct package.json from root
-const packageJson = JSON.parse(
-  readFileSync(join(__dirname, "..", "package.json"), "utf-8")
-);
-
-program.version(packageJson.version, "-v, --version", "Show version number");
+const version = packageJson.version;
 
 const isWindows = os.platform() === "win32";
 
@@ -35,25 +32,18 @@ function parseTree(inputLines) {
   const root = {};
   const stack = [{ depth: -1, node: root }];
 
-  // find depth
   function getDepth(line) {
-    const treeChars = new Set([" ", "│", "├", "└", "─"]);
-    let firstCharIndex = 0;
-    while (
-      firstCharIndex < line.length &&
-      treeChars.has(line[firstCharIndex])
-    ) {
-      firstCharIndex++;
-    }
-    return Math.floor(firstCharIndex / 4);
+    const match = line.match(/^([│ ]*?)(├── |└── )?/);
+    if (!match) return 0;
+    const prefix = match[1] || "";
+    return [...prefix].filter((ch) => ch === " " || ch === "│").length / 4;
   }
 
   inputLines.forEach((line) => {
     if (!line.trim()) return;
 
     const depth = getDepth(line);
-    const trimmed = line.trim();
-    const clean = trimmed.replace(/^[├└│─\s]+/, "");
+    const clean = line.replace(/^[│ ├└─]+/, "").trim();
     const isFolder = clean.endsWith("/");
     const name = isFolder ? clean.slice(0, -1) : clean;
     const node = isFolder ? {} : null;
@@ -64,7 +54,9 @@ function parseTree(inputLines) {
 
     const parent = stack[stack.length - 1].node;
     parent[name] = node;
-    if (isFolder) stack.push({ depth, node });
+    if (isFolder) {
+      stack.push({ depth, node });
+    }
   });
 
   return root;
@@ -114,7 +106,8 @@ program
   .option("--custom", "Create project structure from pasted directory tree")
   .option("--verbose", "Enable verbose logging")
   .option("--debug", "Enable debug logs (more detailed)")
-  .version(packageJson.version, "-v, --version", "Show version number")
+  //show version dynamically
+  .version(`skeldir CLI version ${version}`, "-v, --version")
   .action(async (projectName, options) => {
     const { verbose, debug } = options;
 
@@ -270,12 +263,34 @@ program
       }
       rl.close();
 
+      // Confirm if too many lines (> 20)
+      if (lines.length > 20) {
+        const confirmRl = readline.createInterface({
+          input: process.stdin,
+          output: process.stdout,
+        });
+
+        const question = `You pasted a large structure with ${lines.length} lines. Are you sure you want to create it? (yes/no): `;
+
+        const answer = await new Promise((resolve) => {
+          confirmRl.question(question, (ans) => {
+            confirmRl.close();
+            resolve(ans.trim().toLowerCase());
+          });
+        });
+
+        if (answer !== "yes" && answer !== "y") {
+          console.log(colorText("Aborted by user.\n", chalk.red));
+          process.exit(0);
+        }
+      }
+
       const structure = parseTree(lines);
       createCustomWithContent(targetDir, structure, verbose, debug);
     } else {
       console.log(
         chalk.yellow(
-          "\n⚠️ No framework/language option selected. Created empty folder.\n"
+          "\n⚠️  No framework/language option selected. Created empty folder.\n"
         )
       );
     }
