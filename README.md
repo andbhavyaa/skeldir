@@ -17,7 +17,6 @@
 - [🤝 Contributing](#-contributing)
 
 
-
 ## Why skeldir?
 
 I created `skeldir` because I got tired of manually setting up project folders every time I start a new idea. Copy-pasting old templates felt clunky and often included unnecessary files or folders I didn’t need.
@@ -104,20 +103,39 @@ skeldir --version
 ### 1. Fork this repo
 
 ### 2. Clone your fork
+```bash
+git clone https://github.com/your-username/skeldir.git
+cd skeldir
+```
 
-### 3. Install dependencies
+### 3. Create your own branch and switch to your branch
+```bash
+git checkout -b your-branch-name
+```
+
+### 4. Install dependencies
 ```bash
 npm install
 ```
-### 4. Make your changes
+### 5. Make your changes
 #### Please follow the current coding style and keep commits clean and descriptive.
 
-### 5. Test your changes
+### 6. Test your changes
 #### Make sure your additions work well and don’t break existing features.
 
-### 6. Submit a pull request
-- #### Describe what you changed and why
-- #### Additionally, you may also link any related issues
+### 7. Pull recent changes from main branch.
+```bash
+git pull origin main
+```
+
+### 8. Push your branch
+```bash
+git push origin your-branch-name
+```
+
+### 9. Submit a pull request
+- #### Describe what you changed and why.
+- #### Additionally, you may also link any related issues.
 
 ---
 
