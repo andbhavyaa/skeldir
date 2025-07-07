@@ -82,7 +82,7 @@ function indexStructure(structure) {
   for (const key of keys) {
     const value = structure[key];
     const indexStr = String(count).padStart(padLength, "0");
-    const newKey = `${indexStr}. ${key}`;
+    const newKey = `${indexStr} - ${key}`;
     if (value && typeof value === "object") {
       indexed[newKey] = indexStructure(value);
     } else {
