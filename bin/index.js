@@ -64,6 +64,24 @@ function parseTree(inputLines) {
   return root;
 }
 
+
+function indexStructure(structure) {
+  let count = 1;
+  const indexed = {};
+
+  for (const key of Object.keys(structure)) {
+    const value = structure[key];
+    const newKey = `${count}. ${key}`;
+    if (value && typeof value === "object") {
+      indexed[newKey] = indexStructure(value);
+    } else {
+      indexed[newKey] = value;
+    }
+    count++;
+  }
+  return indexed;
+}
+
 // recursive function to create respective directories
 function createCustomWithContent(
   basePath,
@@ -106,6 +124,7 @@ program
   .option("--node", "Generate Node.js project")
   .option("--react", "Generate React project")
   .option("--custom", "Create project structure from pasted directory tree")
+  .option("--index", "Prefix folders/files with their order in the tree")
   .option("--verbose", "Enable verbose logging")
   .option("--debug", "Enable debug logs (more detailed)")
   //show version dynamically
@@ -288,7 +307,9 @@ program
       }
 
       const structure = parseTree(lines);
-      createCustomWithContent(targetDir, structure, verbose, debug);
+      const indexedStructure = indexStructure(structure);
+      const finalStructure = options.index ? indexedStructure : structure;
+      createCustomWithContent(targetDir, finalStructure, verbose, debug);
     } else {
       console.log(
         chalk.yellow(
