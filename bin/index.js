@@ -64,14 +64,25 @@ function parseTree(inputLines) {
   return root;
 }
 
-
 function indexStructure(structure) {
+  const keys = Object.keys(structure);
+  const total = keys.length;
+  let padLength = 0;
+  if (total > 99) {
+    padLength = 3;
+  } else if (total > 9) {
+    padLength = 2;
+  } else {
+    padLength = 1;
+  }
+
   let count = 1;
   const indexed = {};
 
-  for (const key of Object.keys(structure)) {
+  for (const key of keys) {
     const value = structure[key];
-    const newKey = `${count}. ${key}`;
+    const indexStr = String(count).padStart(padLength, "0");
+    const newKey = `${indexStr}. ${key}`;
     if (value && typeof value === "object") {
       indexed[newKey] = indexStructure(value);
     } else {
