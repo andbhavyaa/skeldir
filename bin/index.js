@@ -28,24 +28,17 @@ function isValidProjectName(name) {
 }
 
 function parseTree(inputLines) {
-  if (inputLines.length === 0) return {};
+  // The root is always the project folder, so we don't use the first line as root
+  const root = {}; // All pasted lines are children of the root
+  const stack = [{ depth: -1, node: root }];
 
-  // Parse the root folder name from the first line (e.g. "minion/")
-  const rootLine = inputLines[0].trim();
-  const rootName = rootLine.endsWith("/") ? rootLine.slice(0, -1) : rootLine;
-
-  const root = { [rootName]: {} }; // Root node with root folder key
-  const stack = [{ depth: -1, node: root[rootName] }]; // Start stack with root folder's object
-
-  // Helper to calculate depth based on position of branch characters
   function getDepth(line) {
     const branchIndex = line.search(/├── |└── /);
     if (branchIndex === -1) return 0;
-    return Math.floor(branchIndex / 4);
+    return Math.floor(branchIndex / 4) + 1; // +1 because root is depth 0
   }
 
-  // Start processing from second line (index 1), because index 0 is root
-  for (let i = 1; i < inputLines.length; i++) {
+  for (let i = 0; i < inputLines.length; i++) {
     const line = inputLines[i];
     if (!line.trim()) continue;
 
