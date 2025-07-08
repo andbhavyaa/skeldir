@@ -27,15 +27,21 @@ function isValidProjectName(name) {
   return /^[a-zA-Z0-9_-]+$/.test(name);
 }
 
+function sanitizeName(name) {
+  // Remove characters not allowed in Windows and Unix filenames
+  // Windows: \ / : * ? " < > |, Unix: /
+  // Also trim whitespace
+  return name.replace(/[\\\/:\*\?"<>\|\r\n]/g, "").trim();
+}
+
 function parseTree(inputLines) {
-  // The root is always the project folder, so we don't use the first line as root
-  const root = {}; // All pasted lines are children of the root
+  let root = {};
   const stack = [{ depth: -1, node: root }];
 
   function getDepth(line) {
     const branchIndex = line.search(/├── |└── /);
     if (branchIndex === -1) return 0;
-    return Math.floor(branchIndex / 4) + 1; // +1 because root is depth 0
+    return Math.floor(branchIndex / 4) + 1;
   }
 
   for (let i = 0; i < inputLines.length; i++) {
@@ -44,11 +50,13 @@ function parseTree(inputLines) {
 
     const depth = getDepth(line);
     const clean = line.replace(/^[│ ├└─]+/, "").trim();
+    if (!clean) continue;
     const isFolder = clean.endsWith("/");
-    const name = isFolder ? clean.slice(0, -1) : clean;
+    let name = isFolder ? clean.slice(0, -1) : clean;
+    name = sanitizeName(name);
+    if (!name) continue; // skip if name is empty after sanitizing
     const node = isFolder ? {} : null;
 
-    // Pop stack until we find parent at depth - 1
     while (stack.length && depth <= stack[stack.length - 1].depth) {
       stack.pop();
     }
@@ -82,7 +90,11 @@ function indexStructure(structure) {
   for (const key of keys) {
     const value = structure[key];
     const indexStr = String(count).padStart(padLength, "0");
-    const newKey = `${indexStr} - ${key}`;
+    const newKey = `${indexStr} - ${sanitizeName(key)}`;
+    if (!sanitizeName(key)) {
+      count++;
+      continue; // skip if name is empty after sanitizing
+    }
     if (value && typeof value === "object") {
       indexed[newKey] = indexStructure(value);
     } else {
