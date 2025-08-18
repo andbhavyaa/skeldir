@@ -27,35 +27,36 @@ function isValidProjectName(name) {
   return /^[a-zA-Z0-9_-]+$/.test(name);
 }
 
+function sanitizeName(name) {
+  // Remove characters not allowed in Windows and Unix filenames
+  // Windows: \ / : * ? " < > |, Unix: /
+  // Also trim whitespace
+  return name.replace(/[\\\/:\*\?"<>\|\r\n]/g, "").trim();
+}
+
 function parseTree(inputLines) {
-  if (inputLines.length === 0) return {};
+  let root = {};
+  const stack = [{ depth: -1, node: root }];
 
-  // Parse the root folder name from the first line (e.g. "minion/")
-  const rootLine = inputLines[0].trim();
-  const rootName = rootLine.endsWith("/") ? rootLine.slice(0, -1) : rootLine;
-
-  const root = { [rootName]: {} }; // Root node with root folder key
-  const stack = [{ depth: -1, node: root[rootName] }]; // Start stack with root folder's object
-
-  // Helper to calculate depth based on position of branch characters
   function getDepth(line) {
     const branchIndex = line.search(/├── |└── /);
     if (branchIndex === -1) return 0;
-    return Math.floor(branchIndex / 4);
+    return Math.floor(branchIndex / 4) + 1;
   }
 
-  // Start processing from second line (index 1), because index 0 is root
-  for (let i = 1; i < inputLines.length; i++) {
+  for (let i = 0; i < inputLines.length; i++) {
     const line = inputLines[i];
     if (!line.trim()) continue;
 
     const depth = getDepth(line);
     const clean = line.replace(/^[│ ├└─]+/, "").trim();
+    if (!clean) continue;
     const isFolder = clean.endsWith("/");
-    const name = isFolder ? clean.slice(0, -1) : clean;
+    let name = isFolder ? clean.slice(0, -1) : clean;
+    name = sanitizeName(name);
+    if (!name) continue; // skip if name is empty after sanitizing
     const node = isFolder ? {} : null;
 
-    // Pop stack until we find parent at depth - 1
     while (stack.length && depth <= stack[stack.length - 1].depth) {
       stack.pop();
     }
@@ -69,6 +70,39 @@ function parseTree(inputLines) {
   }
 
   return root;
+}
+
+function indexStructure(structure) {
+  const keys = Object.keys(structure);
+  const total = keys.length;
+  let padLength = 0;
+  if (total > 99) {
+    padLength = 3;
+  } else if (total > 9) {
+    padLength = 2;
+  } else {
+    padLength = 1;
+  }
+
+  let count = 1;
+  const indexed = {};
+
+  for (const key of keys) {
+    const value = structure[key];
+    const indexStr = String(count).padStart(padLength, "0");
+    const newKey = `${indexStr} - ${sanitizeName(key)}`;
+    if (!sanitizeName(key)) {
+      count++;
+      continue; // skip if name is empty after sanitizing
+    }
+    if (value && typeof value === "object") {
+      indexed[newKey] = indexStructure(value);
+    } else {
+      indexed[newKey] = value;
+    }
+    count++;
+  }
+  return indexed;
 }
 
 // recursive function to create respective directories
@@ -113,6 +147,7 @@ program
   .option("--node", "Generate Node.js project")
   .option("--react", "Generate React project")
   .option("--custom", "Create project structure from pasted directory tree")
+  .option("--index", "Prefix folders/files with their order in the tree")
   .option("--verbose", "Enable verbose logging")
   .option("--debug", "Enable debug logs (more detailed)")
   //show version dynamically
@@ -295,7 +330,9 @@ program
       }
 
       const structure = parseTree(lines);
-      createCustomWithContent(targetDir, structure, verbose, debug);
+      const indexedStructure = indexStructure(structure);
+      const finalStructure = options.index ? indexedStructure : structure;
+      createCustomWithContent(targetDir, finalStructure, verbose, debug);
     } else {
       console.log(
         chalk.yellow(
