@@ -10,7 +10,7 @@
   "dependencies": {
     "chalk": "^5.4.1",
     "commander": "^11.1.0",
-    "skeldir": "^1.0.1"
+    "skeldir": "^1.0.4"
   },
   "type": "module",
   "main": "index.js",
@@ -18,5 +18,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "devDependencies": {}
+  "devDependencies": {
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0"
+  }
 }

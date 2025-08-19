@@ -117,7 +117,7 @@ function createCustomWithContent(
     const value = structure[key];
     try {
       if (value === null) {
-        fs.writeFileSync(fullPath, `// ${key} created by skelder\n`);
+        fs.writeFileSync(fullPath, `// ${key} created by skeldir\n`);
         logVerbose(`Created file: ${fullPath}`, verbose);
       } else if (typeof value === "string") {
         fs.writeFileSync(fullPath, value);
