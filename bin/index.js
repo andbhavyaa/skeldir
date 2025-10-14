@@ -8,7 +8,7 @@ import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const packageJsonPath = path.resolve(__dirname, "..", "package.json"); // one level up
+const packageJsonPath = path.resolve(__dirname, "..", "package.json");
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
 
 const version = packageJson.version;
@@ -28,9 +28,6 @@ function isValidProjectName(name) {
 }
 
 function sanitizeName(name) {
-  // Remove characters not allowed in Windows and Unix filenames
-  // Windows: \ / : * ? " < > |, Unix: /
-  // Also trim whitespace
   return name.replace(/[\\\/:\*\?"<>\|\r\n]/g, "").trim();
 }
 
@@ -54,7 +51,7 @@ function parseTree(inputLines) {
     const isFolder = clean.endsWith("/");
     let name = isFolder ? clean.slice(0, -1) : clean;
     name = sanitizeName(name);
-    if (!name) continue; // skip if name is empty after sanitizing
+    if (!name) continue;
     const node = isFolder ? {} : null;
 
     while (stack.length && depth <= stack[stack.length - 1].depth) {
@@ -93,7 +90,7 @@ function indexStructure(structure) {
     const newKey = `${indexStr} - ${sanitizeName(key)}`;
     if (!sanitizeName(key)) {
       count++;
-      continue; // skip if name is empty after sanitizing
+      continue;
     }
     if (value && typeof value === "object") {
       indexed[newKey] = indexStructure(value);
@@ -105,7 +102,6 @@ function indexStructure(structure) {
   return indexed;
 }
 
-// recursive function to create respective directories
 function createCustomWithContent(
   basePath,
   structure,
@@ -150,7 +146,6 @@ program
   .option("--index", "Prefix folders/files with their order in the tree")
   .option("--verbose", "Enable verbose logging")
   .option("--debug", "Enable debug logs (more detailed)")
-  //show version dynamically
   .version(`skeldir CLI version ${version}`, "-v, --version")
   .action(async (projectName, options) => {
     const { verbose, debug } = options;
@@ -184,6 +179,11 @@ program
       process.exit(1);
     }
 
+    // ===== REFACTOR & FIX 2 STARTS HERE =====
+    // We'll define a base structure variable and populate it based on the options.
+    let structure = null;
+    let isCustomFlow = false; // Flag to handle custom file creation logic separately
+
     const writeFile = (filename, content) => {
       const filePath = path.join(targetDir, filename);
       fs.writeFileSync(filePath, content);
@@ -193,10 +193,9 @@ program
     const createReadme = () =>
       writeFile("README.md", `# ${projectName}\n\nCreated by skeldir CLI`);
 
-    // structure handling
     if (options.flutter) {
       console.log(chalk.green("\n🚀 Creating Flutter project structure...\n"));
-      const structure = {
+      structure = {
         lib: {
           core: {
             "themes.dart": null,
@@ -219,8 +218,8 @@ program
           "main.dart": null,
         },
       };
-      createCustomWithContent(targetDir, structure, verbose, debug);
     } else if (options.java) {
+      isCustomFlow = true; // Special case that doesn't use the structure object
       const javaPath = path.join(targetDir, "src", "main", "java");
       fs.mkdirSync(javaPath, { recursive: true });
       writeFile(
@@ -229,24 +228,28 @@ program
       );
       createReadme();
     } else if (options.python) {
+      isCustomFlow = true;
       writeFile(
         "main.py",
         `def main():\n    print("Hello, Python!")\n\nif __name__ == "__main__":\n    main()\n`
       );
       createReadme();
     } else if (options.c) {
+      isCustomFlow = true;
       writeFile(
         "main.c",
         `#include <stdio.h>\n\nint main() {\n    printf("Hello, C!\\n");\n    return 0;\n}\n`
       );
       createReadme();
     } else if (options.cpp) {
+      isCustomFlow = true;
       writeFile(
         "main.cpp",
         `#include <iostream>\n\nint main() {\n    std::cout << "Hello, C++!" << std::endl;\n    return 0;\n}\n`
       );
       createReadme();
     } else if (options.node) {
+      isCustomFlow = true;
       const packageJson = {
         name: projectName,
         version: "1.0.0",
@@ -258,9 +261,9 @@ program
       writeFile("package.json", JSON.stringify(packageJson, null, 2));
       writeFile("index.js", `console.log("Hello, Node.js!");\n`);
     } else if (options.react) {
+      isCustomFlow = true;
       fs.mkdirSync(path.join(targetDir, "src"), { recursive: true });
       fs.mkdirSync(path.join(targetDir, "public"), { recursive: true });
-
       const packageJson = {
         name: projectName,
         version: "1.0.0",
@@ -307,15 +310,12 @@ program
       }
       rl.close();
 
-      // Confirm if too many lines (> 20)
       if (lines.length > 20) {
         const confirmRl = readline.createInterface({
           input: process.stdin,
           output: process.stdout,
         });
-
         const question = `You pasted a large structure with ${lines.length} lines. Are you sure you want to create it? (yes/no): `;
-
         const answer = await new Promise((resolve) => {
           confirmRl.question(question, (ans) => {
             confirmRl.close();
@@ -324,22 +324,28 @@ program
         });
 
         if (answer !== "yes" && answer !== "y") {
-          console.log(colorText("Aborted by user.\n", chalk.red));
+          // FIX 1: Replaced undefined `colorText` with direct `chalk.red`
+          console.log(chalk.red("Aborted by user.\n"));
           process.exit(0);
         }
       }
+      structure = parseTree(lines);
+    }
 
-      const structure = parseTree(lines);
-      const indexedStructure = indexStructure(structure);
-      const finalStructure = options.index ? indexedStructure : structure;
+    // Now, handle structure creation universally
+    if (structure) {
+      const finalStructure = options.index
+        ? indexStructure(structure)
+        : structure;
       createCustomWithContent(targetDir, finalStructure, verbose, debug);
-    } else {
+    } else if (!isCustomFlow) {
       console.log(
         chalk.yellow(
           "\n⚠️  No framework/language option selected. Created empty folder.\n"
         )
       );
     }
+    // ===== REFACTOR & FIX 2 ENDS HERE =====
 
     console.log(
       chalk.green(`\n✅ Project '${projectName}' created at ${targetDir}\n`)

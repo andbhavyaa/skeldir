@@ -1,6 +1,6 @@
 {
   "name": "skeldir",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "CLI to generate directory for a project from pasted tree structure.",
   "bin": {
     "skeldir": "bin/index.js"
@@ -20,7 +20,7 @@
   },
   "keywords": [],
   "devDependencies": {
-    "patch-package": "^8.0.0",
+    "patch-package": "^8.0.1",
     "postinstall-postinstall": "^2.1.0"
   }
 }
