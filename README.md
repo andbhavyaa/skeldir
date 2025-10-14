@@ -2,7 +2,8 @@
 
 #### A minimal CLI tool to quickly scaffold clean project directories from your pasted tree structure.  
 ##### No clutter, no hassle — just your project ready to go.
-[![npm version](https://img.shields.io/npm/v/skeldir](https://www.npmjs.com/package/skeldir)
+[![npm version](https://img.shields.io/npm/v/skeldir)](https://www.npmjs.com/package/skeldir)
+
 
 ---
 
