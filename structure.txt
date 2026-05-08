@@ -1,0 +1,17 @@
+skeldir/
+├── src/
+│   ├── config.js
+│   ├── creator.js
+│   ├── creator.test.js
+│   ├── gitignore.js
+│   ├── parser.js
+│   ├── parser.test.js
+│   ├── templateManager.js
+│   ├── templates.js
+│   ├── treeGenerator.js
+│   ├── utils.js
+│   └── utils.test.js
+├── LICENSE
+├── package-lock.json
+├── package.json
+└── README.md
